@@ -263,31 +263,75 @@ int SendScreen()
 }
 #include "LokDialog.h"
 CLokDialog dlg;
-int  LockMachine()
+unsigned threadid = 0;
+
+unsigned  __stdcall threadLockDlg(void* arg)
 {
-    ShowCursor(false);
+    TRACE("%s(%d):%d\r\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
     dlg.Create(IDD_DIALOG_INFO, NULL);
     dlg.ShowWindow(SW_SHOW);
+    //遮蔽后台窗口
+    CRect rect;
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
+    rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
+    rect.bottom *= 1.10; //把y的像素点扩大
+    dlg.MoveWindow(rect);
+    //窗口置顶
     dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOSIZE);
+    //限制鼠标
+    ShowCursor(false);
+    //隐藏任务栏
+    ::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_HIDE);
+
+    ClipCursor(rect);//限制鼠标活动范围
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = 1;
+    rect.bottom = 1;
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
         if (msg.message == WM_KEYDOWN) {
             TRACE("msg:%08X wparam:%08X  lparam:%08X\r\n", msg.message, msg.wParam, msg.lParam);
-            if (msg.wParam == 0x1B) {  //ESC 退出
+            if (msg.wParam == 0x41) {  //按下a键推出循环
                 break;
             }
-         
+
         }
     }
-    dlg.DestroyWindow();
+    
     ShowCursor(true);
-        
+   ::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_SHOW);
+   dlg.DestroyWindow();
+    _endthreadex(0);
     return 0;
+}
+int  LockMachine()
+{
+    if ((dlg.m_hWnd == NULL) || (dlg.m_hWnd == INVALID_HANDLE_VALUE)) {
+        //_beginthread(threadLockDlg, 0, NULL);
+        _beginthreadex(NULL, 0, threadLockDlg, NULL, 0, &threadid);
+        TRACE("threadid=%d\r\n", threadid);
+       
+        return 0;
+    }
+    
+      CPacket pack(7, NULL, 0);
+      CServersocket::getInstance()->Send(pack);
+    
+    
+     return 0;
 }
 int UnlockMachine()
 {
+   
+    PostThreadMessage(threadid,WM_KEYDOWN, 0X41, 0);
+
+    CPacket pack(8, NULL, 0);
+    CServersocket::getInstance()->Send(pack);
     return 0;
 }
 int main()
@@ -307,28 +351,28 @@ int main()
         }
         else
         {
-			/*CServersocket* pserver = CServersocket::getInstance();
-			int count = 0;
-			if (pserver->InitSocket() == false) {
-				MessageBox(NULL, _T(""), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-				exit(0);
-			}
-			while (CServersocket::getInstance() != NULL)
-			{
+            /*CServersocket* pserver = CServersocket::getInstance();
+            int count = 0;
+            if (pserver->InitSocket() == false) {
+                MessageBox(NULL, _T(""), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+                exit(0);
+            }
+            while (CServersocket::getInstance() != NULL)
+            {
 
-				if (pserver->AcceptClient() == false) {
-					if (count >= 3) {
-						MessageBox(NULL, _T("多次无法正常接入用户，结束程序"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
-						exit(0);
-					}
-					MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
-					count++;
-				}
-				int ret = pserver->DealCommand();
+                if (pserver->AcceptClient() == false) {
+                    if (count >= 3) {
+                        MessageBox(NULL, _T("多次无法正常接入用户，结束程序"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
+                        exit(0);
+                    }
+                    MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
+                    count++;
+                }
+                int ret = pserver->DealCommand();
 
-			}*/
-            
-            int nCmd =7 ;
+            }*/
+
+            int nCmd = 7;
             switch (nCmd) {
             case 1://查看磁盘分区
                 MakeDriverInfo();
@@ -354,7 +398,12 @@ int main()
                 break;
 
             }
-            
+           Sleep(10);
+          // UnlockMachine();
+            TRACE("m_hWnd=%08X\r\n", dlg.m_hWnd);
+            while (dlg.m_hWnd != NULL) {
+                Sleep(10);
+            }
         }
     }
     else
