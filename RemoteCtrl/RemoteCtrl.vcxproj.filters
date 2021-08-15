@@ -33,6 +33,9 @@
     <ClInclude Include="Serversocket.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="LokDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RemoteCtrl.cpp">
@@ -42,6 +45,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Serversocket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LokDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
