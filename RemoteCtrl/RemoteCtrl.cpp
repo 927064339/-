@@ -7,6 +7,7 @@
 #include "Serversocket.h"
 #include <direct.h>
 #include <atlimage.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -334,6 +335,45 @@ int UnlockMachine()
     CServersocket::getInstance()->Send(pack);
     return 0;
 }
+int TestConnect()
+{
+    CPacket pack(1981, NULL, 0);
+ bool ret=   CServersocket::getInstance()->Send(pack);
+ TRACE("Send ret=%d\r\n", ret);
+    return 0;
+}
+int ExcuteCommand(int nCmd)
+{
+    int ret = 0;
+    switch (nCmd) {
+    case 1://查看磁盘分区
+        ret = MakeDriverInfo();
+        break;
+    case 2:  //查看指定目录文件
+        ret = MakeDirectoryInfo();
+        break;
+    case 3: //打开文化
+        ret = RunFile();
+        break;
+    case 4://下载文件
+        ret = DownloadFile();
+    case 5://鼠标操作
+        ret = MouseEvent();
+        break;
+    case 6://发送屏幕内容==发送屏幕截图
+        ret = SendScreen();
+    case 7:
+        ret = LockMachine();//图片覆盖
+        break;
+    case 8:
+        ret = UnlockMachine();//解锁
+        break;
+    case 1981:
+        ret = TestConnect();
+        break;
+    }
+    return 0;
+}
 int main()
 {
     int nRetCode = 0;
@@ -351,7 +391,7 @@ int main()
         }
         else
         {
-            /*CServersocket* pserver = CServersocket::getInstance();
+            CServersocket* pserver = CServersocket::getInstance();
             int count = 0;
             if (pserver->InitSocket() == false) {
                 MessageBox(NULL, _T(""), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
@@ -368,42 +408,24 @@ int main()
                     MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
                     count++;
                 }
+                TRACE("AcceptClient return true\r\n");
                 int ret = pserver->DealCommand();
-
-            }*/
-
-            int nCmd = 7;
-            switch (nCmd) {
-            case 1://查看磁盘分区
-                MakeDriverInfo();
-                break;
-            case 2:  //查看指定目录文件
-                MakeDirectoryInfo();
-                break;
-            case 3: //打开文化
-                RunFile();
-                break;
-            case 4://下载文件
-                DownloadFile();
-            case 5://鼠标操作
-                MouseEvent();
-                break;
-            case 6://发送屏幕内容==发送屏幕截图
-                SendScreen();
-            case 7:
-                LockMachine();
-                break;
-            case 8:
-                UnlockMachine();
-                break;
+                TRACE("DealCommad ret %d\r\n", ret);
+                if (ret > 0) {
+                  ret =  ExcuteCommand(ret);
+                  if (ret != 0) {
+                      TRACE("执行命令失败：%d ret=%d\r\n", pserver->Getpacket().sCmd,ret);
+                  }
+                  pserver->CloseClient();
+                  TRACE("Command has done!\r\n");
+                }
+                
+                
+              
 
             }
-           Sleep(10);
-          // UnlockMachine();
-            TRACE("m_hWnd=%08X\r\n", dlg.m_hWnd);
-            while (dlg.m_hWnd != NULL) {
-                Sleep(10);
-            }
+            
+
         }
     }
     else

@@ -153,11 +153,11 @@ public:
 	}
 	bool AcceptClient()
 	{
+		TRACE("enter AcceptClient\r\n");
 		sockaddr_in client_adr;
-		memset(&client_adr, 0, sizeof(client_adr));
-
 		int cli_sz = sizeof(client_adr);
 		m_client = accept(m_sock, (sockaddr*)&client_adr, &cli_sz); //分机一个去服务
+		TRACE("m_client=%d\r\n", m_client);
 		if (m_client == -1)return false;
 		return true;
 
@@ -168,25 +168,32 @@ public:
 		if (m_client == -1)return false;
 		//char buffer[1024]{0};
 		char* buffer = new char[BUFFER_SIZE];
+		if (buffer == NULL) {
+			TRACE("内存不足!\r\n");
+			return -2;
+		}
 		memset(buffer, 0, BUFFER_SIZE);
 		size_t index = 0;
 		while (true)
 		{
 			size_t len = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
 			if (len <= 0) {
+				delete[]buffer;
 				return -1;
-
 			}
+			TRACE("recv %d\r\n", len);
 			index += len;
 			len = index;
 			m_packet = CPacket((BYTE*)buffer, len);
 			if (len > 0) {
 				memmove(buffer, buffer + len, BUFFER_SIZE - len);
 				index -= len;
+				delete[]buffer;
 				return m_packet.sCmd;
 			}
 
 		}
+		delete[]buffer;
 		return -1;
 
 	}
@@ -212,10 +219,19 @@ public:
 		}
 		return false;
 	}
+	CPacket& Getpacket() {
+		return m_packet;
+		
+	}
+	void CloseClient()
+	{
+		closesocket(m_client);
+		m_client = INVALID_SOCKET;
+	}
 private:
 	SOCKET m_client;
 	SOCKET m_sock;
-	CPacket m_packet;
+	CPacket m_packet;  //接受的数据包
 	CServersocket& operator=(const CServersocket& ss) {} //把重载运算符构造成私有
 	CServersocket(const CServersocket& ss) {
 		m_sock = ss.m_sock;
