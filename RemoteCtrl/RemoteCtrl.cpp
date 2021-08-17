@@ -37,10 +37,12 @@ int MakeDriverInfo()
     for (int i = 1; i <= 26; i++) {
         if (_chdrive(i) == 0) {
             if (result.size() > 0)
-                result += ',';
-            result += 'A' + i - 1;
-        }
+                   result += ',';
+            result += 'A' + i -1;
+           
+        } 
     }
+    result += ',';
     CPacket pack(1, (BYTE*)result.c_str(), result.size());
     Dump((BYTE*)pack.Data(), pack.Size());
     CServersocket::getInstance()->Send(pack);
