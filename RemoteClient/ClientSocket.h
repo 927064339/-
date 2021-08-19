@@ -117,6 +117,20 @@ typedef struct MouseEvent {
 	WORD nButton;//左键、右键、中建
 	POINT ptXY;//坐标
 }MOUSEEV, * PMOUSEEV;
+typedef struct file_info {
+	file_info() {
+		IsInvalid = FALSE;
+		IsDirectory = -1;
+		HasNext = TRUE;
+		memset(szFileName, 0, sizeof(szFileName));
+	}
+	BOOL IsInvalid; // 是否为有效数据
+	BOOL IsDirectory;//是否 为目录 0否 1 是
+	BOOL HasNext;//是否还有后续
+	char szFileName[256];//文件名字
+
+
+}FILEINFO, * PFILEINFO;
 
 
 std::string GetErrInfo(int wsaErrCode);
@@ -201,7 +215,7 @@ public:
 		if (m_sock == -1)return false;
 		return send(m_sock, pack.Data(), pack.Size(), 0) > 0;
 	}
-	bool GetFiePath(std::string& strPath) {                        //获取路径
+	bool GetFiePath(std::string& strPath) {                        
 		if ((m_packet.sCmd >= 2) && (m_packet.sCmd <= 4)) {
 			strPath = m_packet.strData;
 			return true;

@@ -51,20 +51,7 @@ int MakeDriverInfo()
 #include <stdio.h>
 #include <io.h>
 #include <list>
-typedef struct file_info{
-    file_info() {
-        IsInvalid = FALSE;
-        IsDirectory = -1;
-        HasNext = TRUE;
-        memset(szFileName, 0, sizeof(szFileName));
-    }
-    BOOL IsInvalid; // 是否为有效数据
-    BOOL IsDirectory;//是否 为目录 0否 1 是
-    BOOL HasNext;//是否还有后续
-    char szFileName[256];//文件名字
 
-   
-}FILEINFO,*PFILEINFO;
 int MakeDirectoryInfo() {
     std::string strPath;
     //std::list<FILEINFO>lstFileInfos;
@@ -75,11 +62,7 @@ int MakeDirectoryInfo() {
     }
     if (_chdir(strPath.c_str()) != 0) {
         FILEINFO finfo;
-        finfo.IsInvalid = TRUE;
-        finfo.IsDirectory = TRUE;
         finfo.HasNext = FALSE;
-        memcpy(finfo.szFileName, strPath.c_str(), strPath.size());
-       // lstFileInfos.push_back(finfo);
         CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
         CServersocket::getInstance()->Send(pack);
         OutputDebugString(_T("没有权限,访问目录！！"));
@@ -89,6 +72,10 @@ int MakeDirectoryInfo() {
     int hfind = 0;
     if ((hfind=_findfirst("*", &fdata)) == -1) {
         OutputDebugString(_T("没有找到任何文件！！"));
+        FILEINFO finfo;
+        finfo.HasNext = FALSE;
+        CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
+        CServersocket::getInstance()->Send(pack);
         return -3;
   }
     do {
@@ -279,7 +266,7 @@ unsigned  __stdcall threadLockDlg(void* arg)
     rect.top = 0;
     rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
     rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
-    rect.bottom *= 1.10; //把y的像素点扩大
+    rect.bottom = LONG(rect.bottom * 1.03); //把y的像素点扩大
     dlg.MoveWindow(rect);
     //窗口置顶
     dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOSIZE);
