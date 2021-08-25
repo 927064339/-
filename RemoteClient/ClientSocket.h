@@ -185,7 +185,7 @@ public:
 		//char buffer[1024]{0};
 		char* buffer = m_buffer.data();
 		memset(buffer, 0, BUFFER_SIZE);
-		size_t index = 0;
+		static size_t index = 0;
 		while (true)
 		{
 			size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);

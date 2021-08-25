@@ -101,7 +101,7 @@ int RunFile()   //打开文件
     CServersocket::getInstance()->Send(pack);
     return 0;
 }
-int  DownloadFile()
+int  DownloadFile()  //下载文件
 {
      std::string strPath;
     CServersocket::getInstance()->GetFiePath(strPath);
@@ -109,7 +109,7 @@ int  DownloadFile()
     FILE* pFile = NULL;
    errno_t err= fopen_s(&pFile,strPath.c_str(), "rb");      
     if (err!=0) {
-        CPacket pack(4, (BYTE*) & data, 0);
+        CPacket pack(4, (BYTE*) & data, 8);
         CServersocket::getInstance()->Send(pack);
         return -1;
     }
@@ -117,6 +117,7 @@ int  DownloadFile()
         fseek(pFile, 0, SEEK_END);  //查看下载进度
         data = _ftelli64(pFile);
         CPacket head(4, (BYTE*)&data, 8);
+        CServersocket::getInstance()->Send(head);
         fseek(pFile, 0, SEEK_SET);
         char buffer[1024] = "";
         size_t rlen = 0;
