@@ -230,6 +230,7 @@ public:
 		return false;
 	}
 	CPacket& Getpacket() {
+		TRACE("packet=%d\r\n", m_packet);
 		return m_packet;
 
 	}
