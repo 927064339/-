@@ -371,6 +371,7 @@ int ExcuteCommand(int nCmd)
         break;
     case 6://发送屏幕内容==发送屏幕截图
         ret = SendScreen();
+        break;
     case 7:
         ret = LockMachine();//图片覆盖
         break;
