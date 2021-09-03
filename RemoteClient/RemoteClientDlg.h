@@ -21,8 +21,15 @@ public:
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
+public:
+	bool isFull()const {
+		return m_isFull;
+	}
+	CImage& GetImage() {
+		return m_image;
+	}
 private:
-	CImage m_mage; //缓存
+	CImage m_image; //缓存
 	bool m_isFull;//缓存是否有数据  true表示有缓存数据  false 表示没有缓存数据
 private:
 	static void threadEntrForWatchData(void* arg);//静态函数不能使用this指针
@@ -73,5 +80,7 @@ public:
 	afx_msg void OnRueFile();
 	afx_msg void OnTvnSelchangedTree1Dir(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg LRESULT OnSendPacket(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnBnClickedBtnStartWatch();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
  
