@@ -179,7 +179,7 @@ public:
 
 	}
 
-#define  BUFFER_SIZE 409600
+#define  BUFFER_SIZE 4096000
 	int DealCommand()  //接受数据
 	{
 		if (m_sock == -1)return false;
