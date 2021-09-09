@@ -270,10 +270,20 @@ unsigned  __stdcall threadLockDlg(void* arg)
     CRect rect;
     rect.left = 0;
     rect.top = 0;
-    rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
+    rect.right = GetSystemMetrics(SM_CXFULLSCREEN);//w1
     rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
-    rect.bottom = LONG(rect.bottom * 1.03); //把y的像素点扩大
+    rect.bottom = LONG(rect.bottom * 1.10); //把y的像素点扩大
     dlg.MoveWindow(rect);
+    CWnd* pText = dlg.GetDlgItem(IDC_STATIC);
+    if (pText) {
+        CRect rtText;
+        pText->GetWindowRect(rtText);
+        int nWidth = rtText.Width() ;//w0
+        int x = (rect.right - nWidth) / 2;
+        int nHeight = rtText.Height();
+        int y = (rect.bottom - nHeight) / 2;
+        pText->MoveWindow(x, y, rtText.Width(), rtText.Height());
+    }
     //窗口置顶
     dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOSIZE);
     //限制鼠标
@@ -298,8 +308,9 @@ unsigned  __stdcall threadLockDlg(void* arg)
 
         }
     }
-    
+    //恢复鼠标
     ShowCursor(true);
+    //恢复任务栏
    ::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_SHOW);
    dlg.DestroyWindow();
     _endthreadex(0);
