@@ -86,5 +86,6 @@ public:
 	afx_msg LRESULT OnSendPacket(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedBtnStartWatch();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnLvnItemchangedList1File(NMHDR* pNMHDR, LRESULT* pResult);
 };
  

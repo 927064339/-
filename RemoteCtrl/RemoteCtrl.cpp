@@ -33,43 +33,22 @@ int main()
         else
         {
             CCommand cmd;
-            CServersocket* pserver = CServersocket::getInstance();
-            int count = 0;
-            if (pserver->InitSocket() == false) {
-                MessageBox(NULL, _T(""), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-                exit(0);
-            }
-            while (CServersocket::getInstance() != NULL)
-            {
+           int ret= CServersocket::getInstance()->Run(&CCommand::RunCommand,&cmd);
+           switch (ret) {
+           case -1:
+               MessageBox(NULL, _T(""), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+               exit(0);
+               break;
+           case -2:
+               MessageBox(NULL, _T("多次无法正常接入用户，结束程序"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
+               exit(0);
+               break;
 
-                if (pserver->AcceptClient() == false) {
-                    if (count >= 3) {
-                        MessageBox(NULL, _T("多次无法正常接入用户，结束程序"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
-                        exit(0);
-                    }
-                    MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
-                    count++;
-                }
-                TRACE("AcceptClient return true\r\n");
-                int ret = pserver->DealCommand();
-                TRACE("DealCommad ret %d\r\n", ret);
-                if (ret > 0) {
-                  ret =  cmd.ExcuteCommand(ret);
-                  if (ret != 0) {
-                      TRACE("执行命令失败：%d ret=%d\r\n", pserver->Getpacket().sCmd,ret);
-                  }
-                  pserver->CloseClient();
-                  TRACE("Command has done!\r\n");
-                }
-                
-              
-              
-
-            }
-            
-
+           }
         }
     }
+
+            
     else
     {
         // TODO: 更改错误代码以符合需要
