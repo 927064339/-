@@ -34,9 +34,9 @@ public:
 				count++;
 			}
 			int ret = DealCommand();
-			while(ret > 0) {
-				m_callback(m_arg, ret, lstPackets,m_packet);
-				if (lstPackets.size() > 0) {
+			if(ret > 0) {
+			m_callback(m_arg, ret, lstPackets,m_packet);
+				while(lstPackets.size() > 0) {
 					Send(lstPackets.front());
 					lstPackets.pop_front();
 				}

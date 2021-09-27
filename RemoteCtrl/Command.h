@@ -117,7 +117,7 @@ protected:
 
     int MakeDirectoryInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {
         std::string strPath=inPacket.strData;
-        //std::list<FILEINFO>lstFileInfos;
+       // std::list<FILEINFO>lstFileInfos;
         if (_chdir(strPath.c_str()) != 0) {
             FILEINFO finfo;
             finfo.HasNext = FALSE;
