@@ -32,7 +32,7 @@ public:
      }
 protected:
 	typedef int (CCommand::* CMDFUNC)(std::list<CPacket>& lstPacket, CPacket& inPacket);//成员函数指针
-	std::map<int, CMDFUNC>m_mapFunction;//从命令号到功能的映射
+     std::map<int, CMDFUNC>m_mapFunction;//从命令号到功能的映射
     CLokDialog dlg;
     unsigned threadid;
 
