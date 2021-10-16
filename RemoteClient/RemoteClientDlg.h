@@ -5,8 +5,6 @@
 #pragma once
 #include"ClientSocket.h"
 #include"StatusDlg.h"
-#define WM_SEND_PACKET (WM_USER + 1)//数据包的消息
-
 // CRemoteClientDlg 对话框
 class CRemoteClientDlg : public CDialogEx
 {
@@ -22,18 +20,14 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 public:
-	bool isFull()const {
-		return m_isFull;
-	}
+	
 	CImage& GetImage() {
 		return m_image;
 	}
-	void SetImageStatus(bool isFull= false) {
-		m_isFull = isFull;
-	}
+	
 private:
 	CImage m_image; //缓存
-	bool m_isFull;//缓存是否有数据  true表示有缓存数据  false 表示没有缓存数据
+	
 private:
 	void LoadFileCurrent();
 	void LoadFileInfo();
@@ -66,7 +60,6 @@ public:
 	afx_msg void OnDeleteFile();
 	afx_msg void OnRueFile();
 	afx_msg void OnTvnSelchangedTree1Dir(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg LRESULT OnSendPacket(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedBtnStartWatch();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnLvnItemchangedList1File(NMHDR* pNMHDR, LRESULT* pResult);
