@@ -81,7 +81,7 @@ protected:
 		return true;
 
 	}
-#define  BUFFER_SIZE 2048000
+#define  BUFFER_SIZE 4096000
 	int DealCommand()  //接受数据
 	{
 		if (m_client == -1)return false;

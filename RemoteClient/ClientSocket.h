@@ -3,13 +3,15 @@
 #include"framework.h"
 #include<string>
 #include <vector>
+#include<map>
+#include<list>
 #pragma pack(push)
 #pragma pack(1)
 class CPacket
 {
 public:
 	CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
-	CPacket(WORD nCmd, const BYTE* pData, size_t nSize)  //打包数据
+	CPacket(WORD nCmd, const BYTE* pData, size_t nSize,HANDLE hEvent)  //打包数据
 	{
 		sHead = 0xFEFF;
 		nLength = nSize + 4;
@@ -26,6 +28,7 @@ public:
 		{
 			sSum += BYTE(strData[j]) & 0xFF;
 		}
+		this->hEvent = hEvent;
 	}
 	CPacket(const CPacket& pack) {
 		sHead = pack.sHead;
@@ -33,8 +36,9 @@ public:
 		sCmd = pack.sCmd;
 		strData = pack.strData;
 		sSum = pack.sSum;
+		hEvent = pack.hEvent;
 	}
-	CPacket(const BYTE* pData, size_t& nSize) {
+	CPacket(const BYTE* pData, size_t& nSize) :hEvent(INVALID_HANDLE_VALUE) {
 		size_t i = 0;
 		for (; i < nSize; i++) {
 			if (*(WORD*)(pData + i) == 0xFEFF) {  //找到包头
@@ -80,6 +84,7 @@ public:
 			sCmd = pack.sCmd;
 			strData = pack.strData;
 			sSum = pack.sSum;
+			hEvent = pack.hEvent;
 		}
 		return *this;
 	}
@@ -104,6 +109,7 @@ public:
 	std::string strData;//数据
 	WORD sSum;//和校验
 	//std::string strOut;//整个包的数据
+	HANDLE hEvent;
 };
 #pragma pack(pop)
 typedef struct MouseEvent {
@@ -214,7 +220,7 @@ public:
 		if (m_sock == -1)return false;
 		std::string strOut;
 		pack.Data(strOut);
-		return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
+		return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;               
 	}
 	bool GetFiePath(std::string& strPath) {                        
 		if ((m_packet.sCmd >= 2) && (m_packet.sCmd <= 4)) {
@@ -243,7 +249,11 @@ public:
 		m_nIP = nIP;
 		m_nPort = nPort;
 	}
+	static void threadEntry(void* arg);
+	void threadFunc();
 private:
+	std::list<CPacket>m_lstSend;
+	std::map<HANDLE, std::list<CPacket> >m_mapAck;
 	int m_nIP;//地址
 	int m_nPort;//端口
 	std::vector<char>m_buffer;
@@ -272,6 +282,7 @@ private:
 	~CClientSocket()
 	{
 		closesocket(m_sock);
+		m_sock = INVALID_SOCKET;
 		WSACleanup();
 	}
 	BOOL InitSockEnv()
