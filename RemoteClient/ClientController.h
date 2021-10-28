@@ -8,8 +8,8 @@
 #include"ClientSocket.h"
 #include"CEdoyunTool.h"
 
-#define WM_SEDN_PACK (WM_USER+1)//发送包数据
-#define WM_SEND_DATA (WM_USER+2)//发送数据
+//#define WM_SEDN_PACK (WM_USER+1)//发送包数据
+//#define WM_SEND_DATA (WM_USER+2)//发送数据
 #define WM_SHOW_STATUS (WM_USER+3)//展示状态
 #define WM_SHOW_WATCH (WM_USER+4)//远程监控
 #define WM_SEND_MESSAGE (WM_USER+0x1000)//自定义处理消息
@@ -35,11 +35,7 @@ public:
 	void CloseSocket() {
 		CClientSocket::getInstance()->CloseSocket();
 	}
-	bool SendPacket(const CPacket& pack) {
-		CClientSocket* pClient = CClientSocket::getInstance();
-		if (pClient->InitSocket() == false)return false;
-		pClient->Send(pack);
-	}
+	
 	//1 查看磁盘分区
 	//2 查看指定目录下的文件
 	//3 打开文件
@@ -55,7 +51,7 @@ public:
 	int SendCommandPacket(int nCmd,
 		bool bAutoClose = true, BYTE*
 		pData = NULL,
-		size_t nLength = 0);
+		size_t nLength = 0,std::list<CPacket>* plstPacks=NULL);
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
 		return CEdoyunTool::Bytes2Image(image, pClient->Getpacket().strData);
@@ -90,10 +86,10 @@ protected:
 		
 		}
 	}
-	LRESULT onSedPack(UINT nMsg, WPARAM
-		wParam, LPARAM lParam);
-	LRESULT onSedData(UINT nMsg, WPARAM
-		wParam, LPARAM lParam);
+	/*LRESULT onSedPack(UINT nMsg, WPARAM
+		wParam, LPARAM lParam);*/
+	/*LRESULT onSedData(UINT nMsg, WPARAM
+		wParam, LPARAM lParam);*/
 	LRESULT onShowStatus(UINT nMsg, WPARAM
 		wParam, LPARAM lParam);
 	LRESULT onshowWatcher(UINT nMsg, WPARAM
