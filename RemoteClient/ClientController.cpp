@@ -50,21 +50,25 @@ LRESULT CClientController::SendMessage(MSG msg)
 	MSGINFO info(msg);
 	PostThreadMessage(m_nThreadID, WM_SEND_MESSAGE,
 		(WPARAM)&info, (LPARAM)&hEvent);
-	WaitForSingleObject(hEvent, -1);
+	WaitForSingleObject(hEvent, INFINITE);
+	CloseHandle(hEvent);
 	return info.result;
 }
 int CClientController::SendCommandPacket(int nCmd, bool bAutoClose, BYTE* pData, size_t nLength
 , std::list<CPacket>* plstPacks)
 {
+	TRACE("cmd:%d %s start %d\r\n", nCmd,__FUNCTION__ , GetTickCount64());
 	CClientSocket* pClient = CClientSocket::getInstance();
 	HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	std::list<CPacket> lstPacks;//应答结果包
 	if (plstPacks == NULL)
 		plstPacks = &lstPacks;
 	pClient->SendPacket(CPacket(nCmd, pData, nLength,hEvent), *plstPacks);
+	CloseHandle(hEvent);//回收事件句柄，防止资源耗尽
 	if (plstPacks->size()>0) {
 		return plstPacks->front().sCmd;
 	}
+	TRACE("%s start %d\r\n", __FUNCTION__, GetTickCount64());
 	return -1;
 }
 int CClientController::DownFile(CString strPath)
@@ -105,9 +109,10 @@ void CClientController::threadWatchScreen()
 			std::list<CPacket> lstPacks;
 			int ret = SendCommandPacket(6,true,NULL,0,&lstPacks);
 			if (ret == 6) {
-				if (CEdoyunTool::Bytes2Image(m_remoteDlg.GetImage(),
+				if (CEdoyunTool::Bytes2Image(m_watchDlg.GetImage(),
 					lstPacks.front().strData) == 0) {
 					m_watchDlg.SetImageStatus(true);
+					TRACE("成功设置图片%08X\r\n", (HBITMAP)m_watchDlg.GetImage());
 				}
 			
 				else {

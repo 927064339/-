@@ -18,6 +18,7 @@ public:
 public:
 	int m_objWidth;
 	int m_nobjHeight;
+	CImage m_image;
 protected:
 	bool m_isFull;//缓存是否有数据  true表示有缓存数据  false 表示没有缓存数据
 	DECLARE_MESSAGE_MAP()
@@ -28,6 +29,9 @@ public:
 	}
 	bool isFull()const {
 		return m_isFull;
+	}
+	CImage& GetImage() {
+		return m_image;
 	}
 	CPoint UserpOint2RemoteScreenPoint(CPoint& point, bool isScreen=false);
 	virtual BOOL OnInitDialog();

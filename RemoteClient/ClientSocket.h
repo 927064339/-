@@ -211,26 +211,7 @@ public:
 		return -1;
 
 	}
-	bool SendPacket(const CPacket& pack,std::list<CPacket>&lstPacks) {
-		if (m_sock == INVALID_SOCKET) {
-			if (InitSocket() == false)return false;
-			_beginthread
-			(&CClientSocket::threadEntry, 0, this);
-		}
-		m_lstSend.push_back(pack);
-		WaitForSingleObject(pack.hEvent, INFINITE);
-		std::map < HANDLE, std::list<CPacket> >::iterator it;
-		it = m_mapAck.find(pack.hEvent);
-		if (it != m_mapAck.end()) {
-			std::list<CPacket>::iterator i;
-			for (i = it->second.begin(); i != it->second.end(); i++) {
-				lstPacks.push_back(*i);
-			}
-			m_mapAck.erase(it);
-			return true;
-		}
-		return false;
-	}
+	bool SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed = true);
 	bool GetFiePath(std::string& strPath) {                        
 		if ((m_packet.sCmd >= 2) && (m_packet.sCmd <= 4)) {
 			strPath = m_packet.strData;
@@ -265,8 +246,10 @@ public:
 	static void threadEntry(void* arg);
 	void threadFunc();
 private:
+	bool m_bAutoClose;
 	std::list<CPacket>m_lstSend;
 	std::map<HANDLE, std::list<CPacket> >m_mapAck;
+	std::map<HANDLE, bool>m_mapAutoClosed;
 	int m_nIP;//地址
 	int m_nPort;//端口
 	std::vector<char>m_buffer;
@@ -275,13 +258,14 @@ private:
 	CClientSocket& operator=(const CClientSocket& ss) {} //把重载运算符构造成私有
 	CClientSocket(const CClientSocket& ss)
 	{
+		m_bAutoClose = ss.m_bAutoClose;
 		m_sock = ss.m_sock;
 		m_nIP = ss.m_nIP;
 		m_nPort = ss.m_nPort;
 	}//把副本构造函数设置为私有
 	CClientSocket():
 		m_nIP(INADDR_ANY), m_nPort(0),m_sock
-		(INVALID_SOCKET)
+		(INVALID_SOCKET), m_bAutoClose(true)
 	{
 		if (InitSockEnv() == FALSE)
 		{

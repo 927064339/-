@@ -75,7 +75,7 @@ protected:
 		TRACE("enter AcceptClient\r\n");
 		sockaddr_in client_adr;
 		int cli_sz = sizeof(client_adr);
-		m_client = accept(m_sock, (sockaddr*)&client_adr, &cli_sz); //分机一个去服务
+		m_client = accept(m_sock, (sockaddr*)&client_adr, &cli_sz); //在接受功能允许一个插座上的传入的连接尝试。
 		TRACE("m_client=%d\r\n", m_client);
 		if (m_client == -1)return false;
 		return true;

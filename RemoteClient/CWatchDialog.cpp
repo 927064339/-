@@ -78,20 +78,15 @@ void CWatchDialog::OnTimer(UINT_PTR nIDEvent)
 		if (m_isFull) {
 			CRect rect;
 			m_picture.GetWindowRect(rect);
-			CImage image;
-			pParent->GetImage(image);
-			if (m_objWidth == -1) {
-
-				m_objWidth = image.GetWidth();
-			}
-			if (m_nobjHeight == -1) {
-				m_nobjHeight = image.GetHeight();
-			}
-			image.StretchBlt(m_picture.GetDC()->GetSafeHdc(), 0, 0,
+			m_objWidth = m_image.GetWidth();
+			m_nobjHeight = m_image.GetHeight();
+			m_image.StretchBlt(m_picture.GetDC()->GetSafeHdc(), 0, 0,
 				rect.Width(), rect.Height(), SRCCOPY);
 			m_picture.InvalidateRect(NULL);
-			image.Destroy();
+			TRACE("更新图片完成%d %d\r\n", m_objWidth, m_nobjHeight, (HBITMAP)m_image);
+			m_image.Destroy();
 			m_isFull = false;
+			
 		}
 	}
 	CDialog::OnTimer(nIDEvent);
