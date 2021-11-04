@@ -44,12 +44,14 @@ public:
 	//7 锁机
 	//8 解锁
 	//1981 测试链接
-	//返回值: 是命令号，小于0是错误
+	//返回值: 是状态，true是成功 false是失败
     // 实现
-	int SendCommandPacket(int nCmd,
+	bool SendCommandPacket(
+		HWND hWnd,
+		int nCmd,
 		bool bAutoClose = true, BYTE*
 		pData = NULL,
-		size_t nLength = 0,std::list<CPacket>* plstPacks=NULL);
+		size_t nLength = 0);
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
 		return CEdoyunTool::Bytes2Image(image, pClient->Getpacket().strData);
