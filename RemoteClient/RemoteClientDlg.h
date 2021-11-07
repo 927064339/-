@@ -5,6 +5,9 @@
 #pragma once
 #include"ClientSocket.h"
 #include"StatusDlg.h"
+#ifndef WM_SEDN_PACK_AC
+#define WM_SEDN_PACK_ACK (WM_USER+2)//发送包数据应答
+#endif
 // CRemoteClientDlg 对话框
 class CRemoteClientDlg : public CDialogEx
 {
@@ -55,5 +58,6 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnLvnItemchangedList1File(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEnChangeEdit1Port();
+	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 };
  

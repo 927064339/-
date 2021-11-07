@@ -1,6 +1,7 @@
 ﻿#pragma once
-
-
+#ifndef WM_SEDN_PACK_AC
+#define WM_SEDN_PACK_ACK (WM_USER+2)//发送包数据应答
+#endif
 // CWatchDialog 对话框
 
 class CWatchDialog : public CDialog
@@ -37,6 +38,7 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CStatic m_picture;
+	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);

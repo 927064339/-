@@ -88,14 +88,14 @@ bool CClientSocket::InitSocket()
 
 	return true;
 }
-bool CClientSocket::SendPacket(HWND hwnd, const CPacket& pack, bool isAutoClosed) {
+bool CClientSocket::SendPacket(HWND hwnd, const CPacket& pack, bool isAutoClosed,WPARAM wParam) {
 	if (m_hThread == INVALID_HANDLE_VALUE) {
 		m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
 	}
 	UINT nMode = isAutoClosed ? CSM_AUTOCLSE : 0;
 	std::string strOut;
 	pack.Data(strOut);
-	return  PostThreadMessage(m_nThreadID, WM_SEDN_PACK, (WPARAM)new PACKET_DATA(strOut.c_str(),strOut.size() , nMode), (LPARAM)hwnd);
+	return  PostThreadMessage(m_nThreadID, WM_SEDN_PACK, (WPARAM)new PACKET_DATA(strOut.c_str(),strOut.size() , nMode, wParam), (LPARAM)hwnd);
 }
 
 //bool CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed)
@@ -239,7 +239,7 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
 					size_t nLen = index;
 					CPacket pack((BYTE*)pBuffer, nLen);
 					if (nLen > 0 || (index>0)) {
-						::SendMessage(hWnd, WM_SEDN_PACK_ACK, (WPARAM)new CPacket(pack), 0);
+						::SendMessage(hWnd, WM_SEDN_PACK_ACK, (WPARAM)new CPacket(pack), data.wParam);
 						if (data.nMode & CSM_AUTOCLSE) {
 							CloseSocket();
 							return;
