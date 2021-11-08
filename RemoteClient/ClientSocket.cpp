@@ -41,6 +41,12 @@ CClientSocket::CClientSocket():
 		exit(0);
 
 	}
+	m_eventInvoke = CreateEvent(NULL, TRUE, FALSE,NULL);
+	m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
+	if (WaitForSingleObject(m_eventInvoke, 100) == WAIT_TIMEOUT) {
+		TRACE("网络消息处理线程启动失败\r\n");
+	}
+	CloseHandle(m_eventInvoke);
 	m_buffer.resize(BUFFER_SIZE);
 	memset(m_buffer.data(), 0, BUFFER_SIZE);
 	struct {
@@ -89,13 +95,11 @@ bool CClientSocket::InitSocket()
 	return true;
 }
 bool CClientSocket::SendPacket(HWND hwnd, const CPacket& pack, bool isAutoClosed,WPARAM wParam) {
-	if (m_hThread == INVALID_HANDLE_VALUE) {
-		m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
-	}
 	UINT nMode = isAutoClosed ? CSM_AUTOCLSE : 0;
 	std::string strOut;
 	pack.Data(strOut);
-	return  PostThreadMessage(m_nThreadID, WM_SEDN_PACK, (WPARAM)new PACKET_DATA(strOut.c_str(),strOut.size() , nMode, wParam), (LPARAM)hwnd);
+	bool ret = PostThreadMessage(m_nThreadID, WM_SEDN_PACK, (WPARAM)new PACKET_DATA(strOut.c_str(),strOut.size() , nMode, wParam), (LPARAM)hwnd);
+	return ret;
 }
 
 //bool CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed)
@@ -200,6 +204,7 @@ unsigned CClientSocket::threadEntry(void* arg)
 
 void CClientSocket::threadFunc2()
 {
+	SetEvent(m_eventInvoke);
 	MSG msg;
 	while (::GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
@@ -221,7 +226,7 @@ bool CClientSocket::Send(const CPacket& pack)
 }
 
 void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
-{//TODO:定义一个消息的数据结构(数据和数据长度，模式)   回调消息的数据结构(HWND MESSAGE)
+ {//TODO:定义一个消息的数据结构(数据和数据长度，模式)   回调消息的数据结构(HWND MESSAGE)
 	PACKET_DATA data = *(PACKET_DATA*)wParam;
 	HWND hWnd = (HWND)lParam;
 	delete(PACKET_DATA*)wParam;
