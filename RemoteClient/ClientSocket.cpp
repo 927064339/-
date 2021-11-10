@@ -98,7 +98,11 @@ bool CClientSocket::SendPacket(HWND hwnd, const CPacket& pack, bool isAutoClosed
 	UINT nMode = isAutoClosed ? CSM_AUTOCLSE : 0;
 	std::string strOut;
 	pack.Data(strOut);
+	PACKET_DATA* pData = new PACKET_DATA(strOut.c_str(), strOut.size(), nMode, wParam);
 	bool ret = PostThreadMessage(m_nThreadID, WM_SEDN_PACK, (WPARAM)new PACKET_DATA(strOut.c_str(),strOut.size() , nMode, wParam), (LPARAM)hwnd);
+	if (ret == false) {
+		delete pData;
+	}
 	return ret;
 }
 
@@ -135,72 +139,6 @@ unsigned CClientSocket::threadEntry(void* arg)
 	return 0;
 }
 
-//void CClientSocket::threadFunc()
-//{
-//	std::string strBuffer;
-//	strBuffer.resize(BUFFER_SIZE);
-//	char* pBuffer = (char*)strBuffer.c_str();
-//	 int index = 0;
-//	 InitSocket();
-//	while (m_sock != INVALID_SOCKET) {
-//		if (m_lstSend.size() > 0) {
-//			TRACE("lstSend siize= %d\r\n", m_lstSend.size());
-//			m_lock.lock();
-//			CPacket& head = m_lstSend.front();
-//			m_lock.unlock();
-//			if (Send(head) == false) {
-//				TRACE("发送失败！\r\n");
-//				continue;
-//			}
-//			std::map <HANDLE, std::list<CPacket>& >::iterator it;
-//			it = m_mapAck.find(head.hEvent);
-//			if (it != m_mapAck.end()) {
-//				std::map<HANDLE, bool>::iterator it0 =
-//					m_mapAutoClosed.find(head.hEvent);
-//				do {
-//					int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-//					if (length > 0 || index > 0) {
-//						index += length;
-//						size_t size = (size_t)index;
-//						CPacket pack((BYTE*)pBuffer, size);
-//						if (size > 0) {
-//							//TODO:
-//							pack.hEvent = head.hEvent;
-//							it->second.push_back(pack);
-//							memmove(pBuffer, pBuffer + size, index - size);
-//							index -= size;
-//							if (it0->second) {
-//								SetEvent(head.hEvent);
-//								break;
-//							}
-//						}
-//
-//					}
-//					else if (length <= 0 && index <= 0) {
-//						CloseSocket();
-//						SetEvent(head.hEvent);//等到服务器关闭命令在通知事情完成
-//						if (it0 != m_mapAutoClosed.end()) {
-//						}
-//						else {
-//							TRACE("异常的情况,没有对应的pair\r\n");
-//						}
-//						break;
-//					}
-//				} while (it0->second == false);
-//				
-//			}
-//			m_lock.lock();
-//			m_lstSend.pop_front();
-//			m_mapAutoClosed.erase(head.hEvent);
-//			m_lock.unlock();
-//			if (InitSocket() == false) {
-//				InitSocket();
-//			}
-//		}
-//		Sleep(1);
-//	}
-//	CloseSocket();
-//}
 
 void CClientSocket::threadFunc2()
 {
@@ -209,8 +147,9 @@ void CClientSocket::threadFunc2()
 	while (::GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		if (m_mapFunc.find(msg.message) != m_mapFunc.end()) {
-		  	(this->*m_mapFunc[msg.message])(msg.message, msg.wParam, msg.lParam);
+		std::map<UINT, MSGFUNC>::iterator it = m_mapFunc.find(msg.message);
+		if (it != m_mapFunc.end()) {
+		  	(this->*it->second)(msg.message, msg.wParam, msg.lParam);
 		}
 	}
 
@@ -230,7 +169,7 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	PACKET_DATA data = *(PACKET_DATA*)wParam;
 	HWND hWnd = (HWND)lParam;
 	delete(PACKET_DATA*)wParam;
-	if (InitSocket() == true) {
+	if (InitSocket()!=false) {
 		int ret = send(m_sock, (char*)data.strData.c_str(), data.strData.size(), 0);
 		if (ret > 0) {
 			size_t index = 0;

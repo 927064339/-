@@ -108,28 +108,28 @@ void CClientController::StartWatchScreen()
 void CClientController::threadWatchScreen()
 {
 	Sleep(50);
+	ULONGLONG nTick = GetTickCount64();
 	while (!m_isClosed) {
-		if (m_watchDlg.isFull() == false) {
-			std::list<CPacket> lstPacks;
+		if (m_watchDlg.isFull() == false){
+			if (GetTickCount64() - nTick < 200) {
+				Sleep(200 - DWORD(GetTickCount64() - nTick));
+				
+			}
+			nTick = GetTickCount64();
 			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6,true,NULL,0);
 			//TODO:添加消息响应函数WM_SEND_PACK_ACK
 			//TODO:控制发送频率
-			if (ret == 6) {
-				if (CEdoyunTool::Bytes2Image(m_watchDlg.GetImage(),
-					lstPacks.front().strData) == 0) {
-					m_watchDlg.SetImageStatus(true);
-					TRACE("成功设置图片%08X\r\n", (HBITMAP)m_watchDlg.GetImage());
-				}
-			
-				else {
-					TRACE("获取图片失败！ret=%d\r\n", ret);
-				}
+			if (ret == 1) {
 
 			}
+			else {
+				TRACE("获取图片失败！ret=%d\r\n", ret);
+			}
+			
 		}
 		Sleep(1);
 	}
-
+	TRACE("thread end %d\r\n", m_isClosed);
 }
 void CClientController::threadWatchScreen(void* arg)
 {

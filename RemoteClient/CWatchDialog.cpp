@@ -101,32 +101,33 @@ LRESULT CWatchDialog::OnSendPackAck(WPARAM wParam, LPARAM lParam)
     if (lParam==-1||(lParam==-2)) {
 	//TODO:错误处理
 	}
-	else if (lParam == 1) {
+	else if(lParam == 1) {
 	//对方关闭了套接字
 	}
 	else{
 		CPacket* pPacket = (CPacket*)wParam;
+		
 		if (pPacket != NULL) {
-			switch (pPacket->sCmd) {
+			CPacket head = *(CPacket*)wParam;
+			delete(CPacket*)wParam;
+			switch (head.sCmd) {
 			case 6:
 			{
-				if (m_isFull) {
-					CEdoyunTool::Bytes2Image(m_image, pPacket->strData);
-					CRect rect;
-					m_picture.GetWindowRect(rect);
-					m_objWidth = m_image.GetWidth();
-					m_nobjHeight = m_image.GetHeight();
-					m_image.StretchBlt(m_picture.GetDC()->GetSafeHdc(), 0, 0,
-						rect.Width(), rect.Height(), SRCCOPY);
-					m_picture.InvalidateRect(NULL);
-					TRACE("更新图片完成%d %d\r\n", m_objWidth, m_nobjHeight, (HBITMAP)m_image);
-					m_image.Destroy();
-					m_isFull = false;
-				}
-
+				CEdoyunTool::Bytes2Image(m_image,head.strData);
+				CRect rect;
+				m_picture.GetWindowRect(rect);
+				m_objWidth = m_image.GetWidth();
+				m_nobjHeight = m_image.GetHeight();
+				m_image.StretchBlt(m_picture.GetDC()->GetSafeHdc(), 0, 0,
+					rect.Width(), rect.Height(), SRCCOPY);
+				m_picture.InvalidateRect(NULL);
+				TRACE("更新图片完成%d %d\r\n", m_objWidth, m_nobjHeight, (HBITMAP)m_image);
+				m_image.Destroy();
+				break;
 			}
-			break;
+			
 			case 5:
+				TRACE("远程应答了鼠标操作\r\n");
 			case 7:
 			case 8:
 			default:

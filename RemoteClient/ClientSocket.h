@@ -154,7 +154,7 @@ typedef struct  PacketData{
 	PacketData(const PacketData& data) {
 		strData = data.strData;
 		nMode = data.nMode;
-		wParam = data.nMode;
+		wParam = data.wParam;
 	}
 	PacketData& operator=(const PacketData& data) {
 		if (this != &data) {
