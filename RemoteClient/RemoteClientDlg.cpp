@@ -128,7 +128,7 @@ BOOL CRemoteClientDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	UpdateData();
-	m_server_address = 0xC0A80A6B;//192.168.10.162
+	m_server_address = 0xC0A80A66;//192.168.10.162
 	m_nPort = _T("9527");
 	CClientController* pController =
 		CClientController::getInstance();
@@ -242,29 +242,11 @@ void CRemoteClientDlg::LoadFileInfo()
 	DeleteTreeChildrenItem(hTreeSelected);
 	m_List.DeleteAllItems();
 	CString strPath = GetPath(hTreeSelected);
-	std::list<CPacket>lstPackets;
 	int ncmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(),2, false, (BYTE*)(LPCTSTR)strPath,
 		strPath.GetLength(), (WPARAM)hTreeSelected);
-	if (lstPackets.size() > 0) {
-		std::list<CPacket>::iterator it = lstPackets.begin();
-		for (; it != lstPackets.end(); it++) {
-			PFILEINFO pInfo = (PFILEINFO)(*it).strData.c_str();
-			if (pInfo->HasNext == FALSE)continue;
-			if (pInfo->IsDirectory) {
-				if (CString(pInfo->szFileName) == "." || (CString(pInfo->szFileName) == ".."))
-				{
-					continue;
-				}
-				HTREEITEM hTemp = m_Tree.InsertItem(pInfo->szFileName, hTreeSelected, TVI_LAST);
-				m_Tree.InsertItem("", hTemp, TVI_LAST);
 
-			}
-			else {
-				m_List.InsertItem(0, pInfo->szFileName);
-			}
 
-		}
-	}
+	
 	
 }
 CString CRemoteClientDlg::GetPath(HTREEITEM hTree)
@@ -337,7 +319,6 @@ void CRemoteClientDlg::OnDownloaoFile()   //下载文件
 	HTREEITEM hSelected = m_Tree.GetSelectedItem();
 	strFile = GetPath(hSelected) + strFile; //拿到路径
 	int ret=CClientController::getInstance()->DownFile(strFile);
-	//TODO：大文件传输需要额外处理
 	if (ret != 0) {
 		MessageBox(_T("下载失败!"));
 		TRACE("下载失败:ret=%d\r\n", ret);
@@ -467,7 +448,7 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 				}
 
 			}
-				break;
+			break;
 			case 2://获取文件信息
 			{
 				PFILEINFO pInfo = (PFILEINFO)head.strData.c_str();
@@ -479,6 +460,7 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 					}
 					HTREEITEM hTemp = m_Tree.InsertItem(pInfo->szFileName, (HTREEITEM)lParam, TVI_LAST);
 					m_Tree.InsertItem("", hTemp, TVI_LAST);
+					m_Tree.Expand((HTREEITEM)lParam, TVE_EXPAND);
 
 				}
 				else {
@@ -492,26 +474,32 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 			case 4:
 			{
 				static LONGLONG length = 0, index = 0;
+				TRACE("length %d index %d index %d \r\n ", length, index);
 				if (length == 0) {
 					length = *(long long*)head.strData.c_str();
 					if (length == 0) {
 						AfxMessageBox("文件长度为零或者无法读取文件!!!");
 						CClientController::getInstance()->DownloadEnd();
-						break;
 					}
-					else if (length > 0 && (index >= length)) {
+				}
+				else if (length > 0 && (index >= length)) {
+					fclose((FILE*)lParam);
+					length = 0;
+					index = 0;
+					CClientController::getInstance()->DownloadEnd();
+				}
+				else {
+					FILE* pFile = (FILE*)lParam;
+					fwrite(head.strData.c_str(), 1, head.strData.size(), pFile);
+					index += head.strData.size();
+					TRACE("index=%d\r\n", index);
+					if (index >= length) {
 						fclose((FILE*)lParam);
 						length = 0;
 						index = 0;
 						CClientController::getInstance()->DownloadEnd();
 					}
-					else {
-						FILE* pFile = (FILE*)lParam;
-						fwrite(head.strData.c_str(), head.strData.size(), 1, pFile);
-						index += head.strData.size();
-					}
 				}
-
 			}
 			break;
 			case 9:

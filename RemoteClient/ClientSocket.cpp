@@ -147,9 +147,8 @@ void CClientSocket::threadFunc2()
 	while (::GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		std::map<UINT, MSGFUNC>::iterator it = m_mapFunc.find(msg.message);
-		if (it != m_mapFunc.end()) {
-		  	(this->*it->second)(msg.message, msg.wParam, msg.lParam);
+		if (m_mapFunc.find(msg.message)!= m_mapFunc.end()) {
+		  	(this->*m_mapFunc[msg.message])(msg.message, msg.wParam, msg.lParam);
 		}
 	}
 
@@ -167,34 +166,39 @@ bool CClientSocket::Send(const CPacket& pack)
 void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
  {//TODO:定义一个消息的数据结构(数据和数据长度，模式)   回调消息的数据结构(HWND MESSAGE)
 	PACKET_DATA data = *(PACKET_DATA*)wParam;
-	HWND hWnd = (HWND)lParam;
 	delete(PACKET_DATA*)wParam;
-	if (InitSocket()!=false) {
-		int ret = send(m_sock, (char*)data.strData.c_str(), data.strData.size(), 0);
+	HWND hWnd = (HWND)lParam;
+	size_t nTemp = data.strData.size();
+	CPacket current((BYTE*)data.strData.c_str(), nTemp);
+	if (InitSocket()==true) {
+		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
 		if (ret > 0) {
-			size_t index = 0;
+			 size_t index = 0;
 			std::string strBuffer;
 			strBuffer.resize(BUFFER_SIZE);
 			char* pBuffer = (char*)strBuffer.c_str();
 			while(m_sock != INVALID_SOCKET) {
-				int length = recv(m_sock,pBuffer+index,BUFFER_SIZE-index,0);
-				if (length > 0) {
+				int length = recv(m_sock,pBuffer + index, BUFFER_SIZE- index,0);
+				TRACE("recv length=%d\r\n", length);
+				if (length > 0||(index>0)) {
 					index += (size_t)length;
 					size_t nLen = index;
 					CPacket pack((BYTE*)pBuffer, nLen);
-					if (nLen > 0 || (index>0)) {
+					if (nLen > 0 ) {
 						::SendMessage(hWnd, WM_SEDN_PACK_ACK, (WPARAM)new CPacket(pack), data.wParam);
 						if (data.nMode & CSM_AUTOCLSE) {
 							CloseSocket();
 							return;
 						}
+						index -= nLen;
+						memmove(pBuffer, pBuffer + nLen, index);
 					}
-					index -= nLen;
-					memmove(pBuffer, pBuffer + index, nLen);
+					
 				}
 				else {//TODO:对方关闭了套接字，或者网络设备异常
 					CloseSocket();
-					::SendMessage(hWnd, WM_SEDN_PACK_ACK, NULL, 1);
+					current.nLength = 4;  
+					::SendMessage(hWnd, WM_SEDN_PACK_ACK,(WPARAM)new CPacket(current.sCmd,NULL,0), 1);
 				}
 				
 			}

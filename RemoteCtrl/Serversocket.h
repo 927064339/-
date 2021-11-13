@@ -105,7 +105,7 @@ protected:
 			len = index;
 			m_packet = CPacket((BYTE*)buffer, len);
 			if (len > 0) {
-				memmove(buffer, buffer + len, BUFFER_SIZE - len);
+				memmove(buffer, buffer + len, index);
 				index -= len;
 				delete[]buffer;
 				return m_packet.sCmd;

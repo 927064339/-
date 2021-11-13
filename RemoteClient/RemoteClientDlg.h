@@ -14,6 +14,7 @@ class CRemoteClientDlg : public CDialogEx
 // 构造
 public:
 	CRemoteClientDlg(CWnd* pParent = nullptr);	// 标准构造函数
+	void LoadFileInfo();
 
 // 对话框数据
 #ifdef AFX_DESIGN_TIMEv
@@ -24,7 +25,7 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 private:
 	void LoadFileCurrent();
-	void LoadFileInfo();
+	
 	CString GetPath(HTREEITEM hTree);
 	void DeleteTreeChildrenItem(HTREEITEM hTree);
 	

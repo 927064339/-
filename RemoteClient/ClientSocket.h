@@ -62,7 +62,7 @@ public:
 		if (nLength > 4) {
 			strData.resize(nLength - 2 - 2);
 			memcpy((void*)strData.c_str(), pData + i, nLength - 4);
-			TRACE("%s\r\n", strData.c_str());
+			TRACE("%s\r\n", strData.c_str()+12);
 			i += nLength - 4;
 		}
 		sSum = *(WORD*)(pData + i); i += 2;
@@ -184,7 +184,7 @@ public:
 	}
 	bool InitSocket();
 
-#define  BUFFER_SIZE 4096000
+#define  BUFFER_SIZE 40960000
 	int DealCommand()  //接受数据
 	{
 		if (m_sock == -1)return false;
