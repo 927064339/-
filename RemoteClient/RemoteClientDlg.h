@@ -23,15 +23,15 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
-private:
-	void DealCommand(WORD nCmd,const std::string& strData,LPARAM lParam);
-	void InitUIData();
-	void LoadFileCurrent();
-	CString GetPath(HTREEITEM hTree);
+private://TODO：代码即文档
+	void DealCommand(WORD nCmd,const std::string& strData,LPARAM lParam);//命令处理函数
+	void InitUIData();//客户端ui
+	void LoadFileCurrent();//加载文件当前信息
+	CString GetPath(HTREEITEM hTree);//获取当前路径
 	void DeleteTreeChildrenItem(HTREEITEM hTree);
-	void Str2Tree(const std::string& driver, CTreeCtrl& tree);
-	void UpdateFileInfo(const FILEINFO& finfo, HTREEITEM hParent);
-	void UpdateDownloadFile(const std::string& strData, FILE* pFile);
+	void Str2Tree(const std::string& drivers, CTreeCtrl& tree);//显示系统磁盘
+	void UpdateFileInfo(const FILEINFO& finfo, HTREEITEM hParent);//查找文件
+	void UpdateDownloadFile(const std::string& strData, FILE* pFile);//下载文件
 	
 protected:
 	HICON m_hIcon;
