@@ -11,10 +11,15 @@
 #define new DEBUG_NEW
 #endif
 // 唯一的应用程序对象
-
+//开机启动的时候,程序权限是跟随用户的
 CWinApp theApp;
 using namespace std;
 void ChooseAutoInvoke() {
+    TCHAR wcsSystem[MAX_PATH] = _T("");
+    CString strPath = CString(_T("\\SysWOW64\\RemoteCtrl.exe"));
+    if (PathFileExists(strPath)) {
+        return;
+    }
    CString  strSubKey=_T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
     CString  strInfo = _T("该程序只允许用于合法的用途！\n");
     strInfo += _T("继续运行该程序,将使得这台机器处于被监控！\n");
@@ -40,7 +45,6 @@ void ChooseAutoInvoke() {
       }
       TCHAR sSysPath[MAX_PATH] = _T("");
       GetSystemDirectoryW(sSysPath, MAX_PATH);
-      CString strPath =  CString(_T("%SystemRoot%\\SysWOW64\\RemoteCtrl.exe"));
       ret= RegSetValueEx(hKey, _T("RemoteCtrl"), 0, REG_EXPAND_SZ,(BYTE*)(LPCTSTR)strPath,strPath.GetLength()*sizeof(TCHAR));
       if (ret != ERROR_SUCCESS) {
 		  RegCloseKey(hKey);
