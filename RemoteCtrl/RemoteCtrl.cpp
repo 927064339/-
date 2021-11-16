@@ -82,7 +82,7 @@ void ChooseAutoInvoke() {
        exit(0);
    }
 }
-void ShpwError() {
+void ShowError() {//错误信息函数
     LPVOID lpMessageBuf = NULL;
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
         NULL, GetLastError(),
@@ -90,16 +90,16 @@ void ShpwError() {
     OutputDebugString((LPWSTR)lpMessageBuf);
     LocalFree(lpMessageBuf);
 }
-bool IsAdmin() {//查看是否提权函数
+bool IsAdmin() {// 查看是否管理员权限函数
     HANDLE hToken = NULL;
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
-        ShpwError();
+        ShowError();
         return false;
     }
     TOKEN_ELEVATION eve;
     DWORD len = 0;
     if (GetTokenInformation(hToken, TokenElevation, &eve, sizeof(eve), &len) == FALSE) {
-        ShpwError();
+        ShowError();
         return false;
     }
     CloseHandle(hToken);
@@ -109,16 +109,37 @@ bool IsAdmin() {//查看是否提权函数
     printf("length of tokeninformation is %d\r\n", len);
     return false;
 }
+void RunAsAdmin() {//获取管理检测，使用该权限创建进程
+    HANDLE hToken = NULL;
+    BOOL ret = LogonUser(L"Administrator", NULL, NULL, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &hToken);
+    if (!ret) {
+        ShowError();
+        MessageBox(NULL, _T("登录错误！"), _T("程序错误"), 0);
+        exit(0);
+    }
+    OutputDebugString(L"Logon administrator success!\r\n");
+    STARTUPINFO si = { 0 };
+    PROCESS_INFORMATION pi = { 0 };
+    TCHAR spath[MAX_PATH] = _T("");
+    GetCurrentDirectory(MAX_PATH, spath);
+    CString strCmd = spath;
+    strCmd += _T("\\RemoteCtrl.exe");
+    ret = CreateProcessWithLogonW(_T("Administrator"), NULL,
+        NULL, LOGON_WITH_PROFILE, NULL, (LPWSTR)(LPCWSTR)strCmd, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
+    CloseHandle(hToken);
+    if (!ret) {
+        ShowError();
+        MessageBox(NULL,strCmd,_T("创建进程失败"),0);
+        exit(0);
+    }
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+}
 int main()
 {
-    if (IsAdmin()) {
-        OutputDebugString(L"current is run as adinistrator!\r\n");
-    }
-    else {
-        OutputDebugString(L"current is run as normal user!\r\n");
-    }
     int nRetCode = 0;
-
+   
     HMODULE hModule = ::GetModuleHandle(nullptr);
 
     if (hModule != nullptr)
@@ -131,7 +152,16 @@ int main()
             nRetCode = 1;
         }
         else
-        {
+		{
+			if (IsAdmin()) {
+				OutputDebugString(L"current is run as adinistrator!\r\n");
+			}
+			else {
+				OutputDebugString(L"current is run as normal user!\r\n");
+				RunAsAdmin();
+				return nRetCode;
+			}
+
             CCommand cmd;
             ChooseAutoInvoke();
            int ret= CServersocket::getInstance()->Run(&CCommand::RunCommand,&cmd);
