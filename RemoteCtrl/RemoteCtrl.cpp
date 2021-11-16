@@ -42,6 +42,15 @@ void WriteRegisterTable(const CString& strPath) {
 	}
 	RegCloseKey(hKey);
 }
+/*
+*改bug思路
+* 0观察现象
+* 1确认范围
+* 2分析错误的可能
+* 3调试或者打日志,排查错误
+* 4处理错误
+* 5验证/长时间验证/多次验证/多条件验证
+*/
 void  WriteStartupDir(const CString& strPath) {
    
    CString strCmd = GetCommandLine();
@@ -73,9 +82,41 @@ void ChooseAutoInvoke() {
        exit(0);
    }
 }
-
+void ShpwError() {
+    LPVOID lpMessageBuf = NULL;
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+        NULL, GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&lpMessageBuf, 0, NULL);
+    OutputDebugString((LPWSTR)lpMessageBuf);
+    LocalFree(lpMessageBuf);
+}
+bool IsAdmin() {//查看是否提权函数
+    HANDLE hToken = NULL;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        ShpwError();
+        return false;
+    }
+    TOKEN_ELEVATION eve;
+    DWORD len = 0;
+    if (GetTokenInformation(hToken, TokenElevation, &eve, sizeof(eve), &len) == FALSE) {
+        ShpwError();
+        return false;
+    }
+    CloseHandle(hToken);
+    if (len == sizeof(eve)) {
+        return eve.TokenIsElevated;
+    }
+    printf("length of tokeninformation is %d\r\n", len);
+    return false;
+}
 int main()
 {
+    if (IsAdmin()) {
+        OutputDebugString(L"current is run as adinistrator!\r\n");
+    }
+    else {
+        OutputDebugString(L"current is run as normal user!\r\n");
+    }
     int nRetCode = 0;
 
     HMODULE hModule = ::GetModuleHandle(nullptr);
