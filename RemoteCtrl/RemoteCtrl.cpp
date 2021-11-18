@@ -73,7 +73,7 @@ typedef struct IocpParam {
 	}
 }IOCP_PAPAM;
 
-void threadQueueEntry(HANDLE hIOCP) {
+void threadmain(HANDLE hIOCP) {
 	std::list<std::string>lstString;
 	DWORD dwTransferred = 0;
 	ULONG_PTR Completionkey = 0;
@@ -88,21 +88,24 @@ void threadQueueEntry(HANDLE hIOCP) {
 			lstString.push_back(pParam->strData);
 		}
 		else if (pParam->nOperator == IocpListpop) {
-			std::string* pStr = NULL;
+			std::string str;
 			if (lstString.size() > 0) {
-			    pStr = new std::string(lstString.front());
+				str = lstString.front();
 				lstString.pop_front();
 			}
 			if (pParam->cbFunc) {
-				pParam->cbFunc(pStr);
+				pParam->cbFunc(&str);
 			}
-			
+
 		}
 		else if (pParam->nOperator == IocpListEmpty) {
 			lstString.clear();
 		}
 		delete pParam;
 	}
+}
+void threadQueueEntry(HANDLE hIOCP) {
+	threadmain(hIOCP);
 	_endthread();
 }
 void func(void* arg) {
@@ -126,7 +129,7 @@ int main()
 	ULONGLONG tick = GetTickCount64();
 	while (_kbhit() != 0) {//完成端口，把请求与实现分离了
 		if (GetTickCount64() - tick > 1300) {
-			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PAPAM), (ULONG_PTR)new IOCP_PAPAM(IocpListpop, "hello world"), NULL);
+			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PAPAM), (ULONG_PTR)new IOCP_PAPAM(IocpListpop, "hello world", func), NULL);
 			tick = GetTickCount64();
 		}
 		if (GetTickCount64() - tick >2000) {
