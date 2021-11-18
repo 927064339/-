@@ -16,11 +16,11 @@ public:
         OutputDebugStringA(strOut.c_str());
     }
    static bool RunAsAdmin() {//获取管理检测，使用该权限创建进程
-	   STARTUPINFO si = { 0 };
-	   PROCESS_INFORMATION pi = { 0 };
-	   TCHAR spath[MAX_PATH] = _T("");
-	   GetModuleFileName(NULL, spath, MAX_PATH);
-	   CString strCmd = spath;
+	  STARTUPINFO si = { 0 };
+	  PROCESS_INFORMATION pi = { 0 };
+	  TCHAR spath[MAX_PATH] = _T("");
+	  GetModuleFileName(NULL, spath, MAX_PATH);
+	  CString strCmd = spath;
 	  BOOL ret = CreateProcessWithLogonW(_T("Administrator"), NULL,
 		   NULL, LOGON_WITH_PROFILE, NULL, (LPWSTR)(LPCWSTR)strCmd, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
 	   if (!ret) {
