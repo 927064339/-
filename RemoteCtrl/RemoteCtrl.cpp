@@ -7,6 +7,7 @@
 #include "Serversocket.h"
 #include"Command.h"
 #include<conio.h>
+#include "CEdoyunQueue.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -119,33 +120,57 @@ void func(void* arg) {
 	}
 	
 }
-int main()
-{
-	if (!CEdoyunTool::Init)return 1;
-	HANDLE hIOCP = INVALID_HANDLE_VALUE;//Input/Output Completion Port
-	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);//epoll的区别点1//创建iocp
-	HANDLE hThread=(HANDLE)_beginthread(threadQueueEntry, 0, hIOCP);//把创建好的iocp丢到线程里
-	printf("press any key to exit....\r\n");
-	ULONGLONG tick = GetTickCount64();
-	while (_kbhit() != 0) {//完成端口，把请求与实现分离了
-		if (GetTickCount64() - tick > 1300) {
-			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PAPAM), (ULONG_PTR)new IOCP_PAPAM(IocpListpop, "hello world", func), NULL);
-			tick = GetTickCount64();
+void test(){
+	printf("press any key to exit .....\r\n");
+	CEdoyunQueue<std::string> lstStrings;
+	ULONGLONG tick0 = GetTickCount64(), tick = GetTickCount64(), total = GetTickCount64();
+	while (GetTickCount64() -total<=1000) {//完成端口，把请求与实现分离了
+		if (GetTickCount64() - total >13) {
+			lstStrings.PushBack("hello world");
+			tick0 = GetTickCount64();
 		}
-		if (GetTickCount64() - tick >2000) {
-
-			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PAPAM),  (ULONG_PTR)new IOCP_PAPAM(IocpListpush,"hello world"), NULL);
+		if (GetTickCount64() - tick > 20) {
+			std::string str;
+			lstStrings.PopFront(str);
 			tick = GetTickCount64();
+			printf("pop from queue:%s\r\n", str.c_str());
 		}
 		Sleep(1);
 	}
-	if (hIOCP != NULL) {
-		PostQueuedCompletionStatus(hIOCP, 0, NULL, NULL);
-		WaitForSingleObject(hThread, INFINITE);
+	printf("exit done!size %d\r\n", lstStrings.Size());
+	lstStrings.Clear();
+	printf("exit done!size %d\r\n", lstStrings.Size());
+
+}/*
+ 1 BUG测试/功能测试
+ 2关键因素的测试（内存泄漏，运行的稳定，条件性）
+ 3 压力测试（可靠性测试）
+ 4 性能测试
+ */
+int main()
+{
+	if (!CEdoyunTool::Init)return 1;
+	for (int i = 0; i < 10; i++) {
+		test();
 	}
-	CloseHandle(hIOCP);
-	printf("exit done!\r\n");
-	exit(0);
+	//CEdoyunQueue<std::string> lstStrings;
+	//ULONGLONG tick0 = GetTickCount64(),tick=GetTickCount64();
+	//while (_kbhit() == 0) {//完成端口，把请求与实现分离了
+	//	if (GetTickCount64() - tick0> 1300) {
+	//		lstStrings.PushBack("hello world");
+	//		tick0 = GetTickCount64();
+	//	}
+	//	if (GetTickCount64() - tick >2000) {
+	//		std::string str;
+	//		lstStrings.PopFront(str);
+	//		tick = GetTickCount64();
+	//		printf("pop from queue:%s\r\n", str.c_str());
+	//	}
+	//	Sleep(1);
+	//}
+	//printf("exit done!size %d\r\n", lstStrings.Size());
+	//lstStrings.Clear();
+	//printf("exit done!size %d\r\n", lstStrings.Size());
 
 	/*if ( CEdoyunTool::IsAdmin()) {
 		OutputDebugString(L"current is run as adinistrator!\r\n");
